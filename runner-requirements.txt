@@ -1,0 +1,17 @@
+gradio
+pillow
+numpy
+scikit-image
+pandas
+scipy
+huggingface-hub
+transformers
+requests
+opencv-python-headless 
+imageio
+librosa
+soundfile
+psutil
+httpx
+orjson
+pydantic

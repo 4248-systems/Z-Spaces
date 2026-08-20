@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <title>Spaces &middot; Z System</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+  {% include "_nav.html" %}
+  <div class="container">
+    <br>
+    <h1 style="font-family: Georgia, 'Times New Roman', Times, serif;">Spaces</h1>
+    <table class="spaces">
+      <tr><th>Name</th><th>Node</th><th>Port</th><th>Status</th><th></th></tr>
+      {% for r in spaces %}
+      <tr>
+        <td><a href="/space/{{ r.name }}">{{ r.name }}</a></td>
+        <td>{{ r.node }}</td>
+        <td>{{ r.port }}</td>
+        <td>
+          <span class="status {{ 'running' if r.status == 'running' else '' }}">
+            <i class="bi bi-fan dot"></i>{{ r.status }}
+          </span>
+        </td>
+        <td>
+          {% if r.status == "running" %}
+          <form method="post" action="/space/{{ r.name }}/stop"><button class="btn btn-secondary btn-sm">Stop</button></form>
+          {% else %}
+          <form method="post" action="/space/{{ r.name }}/start"><button class="btn btn-sm">Start</button></form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  <footer class="site">4248 SYSTEMS</footer>
+</body>
+</html>

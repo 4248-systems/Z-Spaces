@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+  <title>Docs &middot; {{ space.name }}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <style>
+    body {color: #e6edf3; }
+    .doc-page { max-width: 960px; margin: 32px auto; padding: 24px 28px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; }
+    .doc-page h1, .doc-page h2, .doc-page h3 { margin-top: 1.2em; }
+    .doc-page p, .doc-page li { line-height: 1.7; }
+    .doc-page code { background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; }
+    .doc-page pre { background: #111827; padding: 12px; overflow: auto; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  {% include "_nav.html" %}
+  <div class="container">
+    <div class="doc-page">
+      <h1>{{ space.name }}</h1>
+      {{ content | safe }}
+    </div>
+  </div>
+  <footer class="site">4248 SYSTEMS</footer>
+</body>
+</html>
