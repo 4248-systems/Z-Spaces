@@ -5,7 +5,7 @@ import os
 import httpx
 import websockets
 from fastapi import FastAPI, Request, Response, WebSocket, WebSocketDisconnect
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -153,15 +153,18 @@ async def space_proxy(request: Request, author: str, repo: str, path: str = ""):
     headers = {k: v for k, v in request.headers.items() if k.lower() not in HOP_BY_HOP_HEADERS}
 
     headers["host"] = request.headers.get("host", target_url)
+    headers["accept-encoding"] = "identity"
     body = await request.body()
 
+    client = httpx.AsyncClient(follow_redirects=False, timeout=httpx.Timeout(10.0, read=None))
+    req = client.build_request(
+        request.method, target_url, params=request.query_params,
+        headers=headers, content=body,
+    )
     try:
-        async with httpx.AsyncClient(follow_redirects=False) as client:
-            upstream = await client.request(
-                request.method, target_url, params=request.query_params,
-                headers=headers, content=body, timeout=60.0,
-            )
+        upstream = await client.send(req, stream=True)
     except httpx.ConnectError:
+        await client.aclose()
         return templates.TemplateResponse(
             request, "loading.html", {"space": with_status(space)}
         )
@@ -169,7 +172,18 @@ async def space_proxy(request: Request, author: str, repo: str, path: str = ""):
     response_headers = {
         k: v for k, v in upstream.headers.items() if k.lower() not in RESPONSE_HEADERS_TO_DROP
     }
-    return Response(content=upstream.content, status_code=upstream.status_code, headers=response_headers)
+
+    async def stream_body():
+        try:
+            async for chunk in upstream.aiter_bytes():
+                yield chunk
+        finally:
+            await upstream.aclose()
+            await client.aclose()
+
+    return StreamingResponse(
+        stream_body(), status_code=upstream.status_code, headers=response_headers
+    )
 
 
 @app.websocket("/space_proxy/{author}/{repo}/{path:path}")
@@ -180,6 +194,8 @@ async def space_proxy_ws(websocket: WebSocket, author: str, repo: str, path: str
         return
     node = NODES[space["node"]]
     target_url = f"ws://{node['host']}:{space['port']}/{path}"
+    if websocket.url.query:
+        target_url += f"?{websocket.url.query}"
 
     await websocket.accept()
     try:
@@ -187,14 +203,22 @@ async def space_proxy_ws(websocket: WebSocket, author: str, repo: str, path: str
             async def client_to_upstream():
                 try:
                     while True:
-                        message = await websocket.receive_text()
-                        await upstream.send(message)
+                        message = await websocket.receive()
+                        if message["type"] != "websocket.receive":
+                            continue
+                        if "text" in message and message["text"] is not None:
+                            await upstream.send(message["text"])
+                        elif "bytes" in message and message["bytes"] is not None:
+                            await upstream.send(message["bytes"])
                 except WebSocketDisconnect:
                     await upstream.close()
 
             async def upstream_to_client():
                 async for message in upstream:
-                    await websocket.send_text(message)
+                    if isinstance(message, bytes):
+                        await websocket.send_bytes(message)
+                    else:
+                        await websocket.send_text(message)
 
             await asyncio.gather(client_to_upstream(), upstream_to_client())
     except (WebSocketDisconnect, websockets.exceptions.ConnectionClosed):
