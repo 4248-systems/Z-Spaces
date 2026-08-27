@@ -20,19 +20,21 @@
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    animation: fadeIn 0.1s ease-in-out;
     max-width: 800px;
   }
+  .docs.is-opening { animation: fadeIn 0.2s ease-in-out; }
+  .docs.is-closing { animation: fadeOut 0.2s ease-in-out; }
   .docs-blur{
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     backdrop-filter: blur(8px);
     z-index: 999;
-    animation: blurIn 0.5s;
   }
+  .docs-blur.is-opening { animation: blurIn 0.2s ease-in-out; }
+  .docs-blur.is-closing { animation: blurOut 0.2s ease-in-out; }
   .docs-header {
     display: flex;
     justify-content: space-between;
@@ -136,18 +138,36 @@
   {% endif %}
 </body>
 <script>
+  let docsCloseTimer;
+
   function showDocs() {
-    document.getElementById("docs").style.display = "flex";
-    document.getElementById("docs-blur").style.display = "block";
+    const docs = document.getElementById("docs");
+    const blur = document.getElementById("docs-blur");
+    clearTimeout(docsCloseTimer);
+    docs.classList.remove("is-closing");
+    blur.classList.remove("is-closing");
+    docs.style.display = "flex";
+    blur.style.display = "block";
+    requestAnimationFrame(() => {
+      docs.classList.add("is-opening");
+      blur.classList.add("is-opening");
+    });
   }
+
   function hideDocs() {
-    // apply fadeOut animation before hiding
-    document.getElementById("docs").style.animation = "fadeOut 0.2s ease-in-out";
-    document.getElementById("docs-blur").style.animation = "blurOut 0.2s ease-in-out";
-    setTimeout(() => {  
-      document.getElementById("docs").style.display = "none";
-      document.getElementById("docs-blur").style.display = "none";
-    }, 200);
+    const docs = document.getElementById("docs");
+    const blur = document.getElementById("docs-blur");
+    docs.classList.remove("is-opening");
+    blur.classList.remove("is-opening");
+    docs.classList.add("is-closing");
+    blur.classList.add("is-closing");
+    clearTimeout(docsCloseTimer);
+    docsCloseTimer = setTimeout(() => {
+      docs.style.display = "none";
+      blur.style.display = "none";
+      docs.classList.remove("is-closing");
+      blur.classList.remove("is-closing");
+    }, 220);
   }
 
 </script>
