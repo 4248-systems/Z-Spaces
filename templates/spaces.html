@@ -11,14 +11,13 @@
     <br>
     <h1 style="font-family: Georgia, 'Times New Roman', Times, serif;">Spaces</h1>
     <table class="spaces">
-      <tr><th>Name</th><th>Node</th><th>Port</th><th>Status</th><th></th></tr>
+      <tr><th>Name</th><th>Node</th><th>Status</th><th></th></tr>
       {% for r in spaces %}
       <tr>
         <td><a href="/space/{{ r.name }}">{{ r.name }}</a></td>
         <td>{{ r.node }}</td>
-        <td>{{ r.port }}</td>
         <td>
-          <span class="status {{ 'running' if r.status == 'running' else '' }}">
+          <span class="status {{ 'running' if r.status == 'running' else '' }} {{ 'error' if r.status == 'exited' else '' }}">
             <i class="bi bi-fan dot"></i>{{ r.status }}
           </span>
         </td>

@@ -13,6 +13,7 @@
   --blue-70: #0043ce;
   --blue-80: #002d9c;
   --blue-90: #001d6c;
+  --error: #fa4d56;
   --bg: var(--gray-100);
   --surface: var(--gray-90);
   --border: var(--gray-80);
@@ -235,4 +236,8 @@ footer.site {
   height: 60vh;
   color: var(--muted);
   font-size: 14px;
+}
+
+.error {
+  color: var(--error);
 }
