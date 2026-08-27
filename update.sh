@@ -1,4 +1,5 @@
 mkdir tmp
 git clone https://github.com/srdg-net/Spaces-Hub tmp
-mv tmp/spaces/* spaces/
+mkdir -p spaces
+cp -r tmp/spaces/. spaces/.
 rm -rf tmp
